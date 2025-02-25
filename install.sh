@@ -1,15 +1,22 @@
 #!/bin/sh
 set -e
-. ./version
 
-unzip -o grandMA3_stick_v${FULLVERSION}.zip -d /tmp/grandMA3_stick_v${FULLVERSION}
+unzip -o $1 -d /tmp/grandMA3
 
 pushd .
-cd /tmp/grandMA3_stick_v${FULLVERSION}/ma/
+cd /tmp/grandMA3/ma/
+
+RELEASEFILE=$(ls ./release_stick_*.xml | head -1)
+FULLVERSION=$(xmllint -xpath '//GMA3/ReleaseFile/Version/text()' $RELEASEFILE)
+VERSION="${FULLVERSION%.*}"
+
+echo "RELEASEFILE: $RELEASEFILE"
+echo "FULLVERSION: $FULLVERSION"
+echo "VERSION: $VERSION"
 
 ### Unzip MA files in $HOME/MALightingTechnology directory ###
-xmllint -xpath '//GMA3/ReleaseFile/MAPacket[not(contains(@Type, "sys")) and not(contains(@Type, "arm")) and not(contains(@Type, "gma2"))]/@Destination' release_stick_v${FULLVERSION}.xml | sed "s/ Destination=/mkdir -p /" | sed "s|/home/ma|$HOME|" | sh
-xmllint -xpath '//GMA3/ReleaseFile/MAPacket[not(contains(@Type, "sys")) and not(contains(@Type, "arm")) and not(contains(@Type, "gma2"))]/@*[name()="Name" or name()="Destination"]' release_stick_v${FULLVERSION}.xml | sed "s/ Destination=/ -d /" | tr -d "\n" | sed "s/ Name=/\nunzip -o /g" | sed "s|/home/ma|$HOME|" | sh
+xmllint -xpath '//GMA3/ReleaseFile/MAPacket[not(contains(@Type, "sys")) and not(contains(@Type, "arm")) and not(contains(@Type, "gma2"))]/@Destination' $RELEASEFILE | sed "s/ Destination=/mkdir -p /" | sed "s|/home/ma|$HOME|" | sh
+xmllint -xpath '//GMA3/ReleaseFile/MAPacket[not(contains(@Type, "sys")) and not(contains(@Type, "arm")) and not(contains(@Type, "gma2"))]/@*[name()="Name" or name()="Destination"]' $RELEASEFILE | sed "s/ Destination=/ -d /" | tr -d "\n" | sed "s/ Name=/\nunzip -o /g" | sed "s|/home/ma|$HOME|" | sh
 popd
 
 mkdir -p $HOME/.local/share/applications
